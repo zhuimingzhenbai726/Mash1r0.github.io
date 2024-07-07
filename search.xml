@@ -5,8 +5,8 @@
     
     <entry>
       <title>PHP反序列化</title>
-      <link href="/Mash1r0/0.html"/>
-      <url>/Mash1r0/0.html</url>
+      <link href="/Mash1r0/1.html"/>
+      <url>/Mash1r0/1.html</url>
       
         <content type="html"><![CDATA[<h1 id="PHP反序列化"><a href="#PHP反序列化" class="headerlink" title="PHP反序列化"></a>PHP反序列化</h1><h2 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h2><p>一个预定义好的，在特定情况下自动触发的行为方法。</p><p>反序列化过程中，unserialize()接受的值（字符串）可控；通过更改这个值（字符串），得到所需要的代码；通过调用魔术方法，触发代码的执行。</p><h4 id="1-construct"><a href="#1-construct" class="headerlink" title="1.__construct()"></a>1.__construct()</h4><p>构造函数，在实例化一个对象的时候，首先会去自动执行的一个方法。</p><p>在实例化时触发它。</p><h4 id="2-destruct"><a href="#2-destruct" class="headerlink" title="2.__destruct()"></a>2.__destruct()</h4><p>析构函数，在对象的所有引用被删除或者当对象被显示销毁时执行的魔术方法。</p><p>实例化对象结束后，代码运行完全销毁会触发。</p><p>在序列化过程中不会触发。</p><p>在反序列化过程中触发，反序列化得到的对象，用完后会销毁，触发它。</p><h4 id="3-sleep"><a href="#3-sleep" class="headerlink" title="3.__sleep()"></a>3.__sleep()</h4><p>序列化之前会触发。</p><p>此功能可以用于清理对象，并返回一个包含对象中所有应被序列化的变量名称的数组。</p><p>如果该方法未返回任何内容，则NULL被序列化，并产生一个E_NOTICE级别的错误。</p><p>它需要参数，参数为成员属性。</p><p>最后会返回需要被序列化存储的成员属性。</p><h4 id="4-wakeup"><a href="#4-wakeup" class="headerlink" title="4.__wakeup()"></a>4.__wakeup()</h4><p>反序列化之前会触发。</p><p>反序列化之前会检查是否存在这个魔术方法，如果存在，则会先调用，预先准备对象需要的资源，返回void。</p><p>常用于反序列化操作中重新建立数据库连接或执行其他初始化操作。</p><h4 id="5-toString"><a href="#5-toString" class="headerlink" title="5.__toString()"></a>5.__toString()</h4><p>把对象当成字符串调用时，会触发。</p><p>例如我们去echo字符串时，echo ‘string’，如果里面是个对象就会触发这个魔术方法。</p><p>调用对象可以使用print_r或者var_dump。</p><p>echo和print会导致对象被当作为字符串使用。</p><h4 id="6-invoke"><a href="#6-invoke" class="headerlink" title="6.__invoke()"></a>6.__invoke()</h4><p>把对象当成函数调用。</p><p>例如有一个   <strong>function abc(){}</strong>    和一个对象  <strong>$test</strong></p><p>我们   <strong>abc();</strong>   会调用这个函数，同理如果我们去写成   <strong>$test();</strong>   就相当于把对象当做函数来用，就会触发这个魔术方法。</p>]]></content>
       
@@ -44,31 +44,9 @@
     
     
     <entry>
-      <title>电影</title>
-      <link href="/movies/index.html"/>
-      <url>/movies/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>音乐</title>
       <link href="/music/index.html"/>
       <url>/music/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -91,6 +69,28 @@
       <title>友情链接</title>
       <link href="/link/index.html"/>
       <url>/link/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>电影</title>
+      <link href="/movies/index.html"/>
+      <url>/movies/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
