@@ -4,11 +4,24 @@
   
     
     <entry>
-      <title>PHP反序列化</title>
+      <title>PHP反序列化部分知识点</title>
       <link href="/Mash1r0/1.html"/>
       <url>/Mash1r0/1.html</url>
       
         <content type="html"><![CDATA[<h1 id="PHP反序列化"><a href="#PHP反序列化" class="headerlink" title="PHP反序列化"></a>PHP反序列化</h1><h2 id="魔术方法"><a href="#魔术方法" class="headerlink" title="魔术方法"></a>魔术方法</h2><p>一个预定义好的，在特定情况下自动触发的行为方法。</p><p>反序列化过程中，unserialize()接受的值（字符串）可控；通过更改这个值（字符串），得到所需要的代码；通过调用魔术方法，触发代码的执行。</p><h4 id="1-construct"><a href="#1-construct" class="headerlink" title="1.__construct()"></a>1.__construct()</h4><p>构造函数，在实例化一个对象的时候，首先会去自动执行的一个方法。</p><p>在实例化时触发它。</p><h4 id="2-destruct"><a href="#2-destruct" class="headerlink" title="2.__destruct()"></a>2.__destruct()</h4><p>析构函数，在对象的所有引用被删除或者当对象被显示销毁时执行的魔术方法。</p><p>实例化对象结束后，代码运行完全销毁会触发。</p><p>在序列化过程中不会触发。</p><p>在反序列化过程中触发，反序列化得到的对象，用完后会销毁，触发它。</p><h4 id="3-sleep"><a href="#3-sleep" class="headerlink" title="3.__sleep()"></a>3.__sleep()</h4><p>序列化之前会触发。</p><p>此功能可以用于清理对象，并返回一个包含对象中所有应被序列化的变量名称的数组。</p><p>如果该方法未返回任何内容，则NULL被序列化，并产生一个E_NOTICE级别的错误。</p><p>它需要参数，参数为成员属性。</p><p>最后会返回需要被序列化存储的成员属性。</p><h4 id="4-wakeup"><a href="#4-wakeup" class="headerlink" title="4.__wakeup()"></a>4.__wakeup()</h4><p>反序列化之前会触发。</p><p>反序列化之前会检查是否存在这个魔术方法，如果存在，则会先调用，预先准备对象需要的资源，返回void。</p><p>常用于反序列化操作中重新建立数据库连接或执行其他初始化操作。</p><h4 id="5-toString"><a href="#5-toString" class="headerlink" title="5.__toString()"></a>5.__toString()</h4><p>把对象当成字符串调用时，会触发。</p><p>例如我们去echo字符串时，echo ‘string’，如果里面是个对象就会触发这个魔术方法。</p><p>调用对象可以使用print_r或者var_dump。</p><p>echo和print会导致对象被当作为字符串使用。</p><h4 id="6-invoke"><a href="#6-invoke" class="headerlink" title="6.__invoke()"></a>6.__invoke()</h4><p>把对象当成函数调用。</p><p>例如有一个   <strong>function abc(){}</strong>    和一个对象  <strong>$test</strong></p><p>我们   <strong>abc();</strong>   会调用这个函数，同理如果我们去写成   <strong>$test();</strong>   就相当于把对象当做函数来用，就会触发这个魔术方法。</p>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>文件上传部分知识点</title>
+      <link href="/Mash1r0/fb7b82f0.html"/>
+      <url>/Mash1r0/fb7b82f0.html</url>
+      
+        <content type="html"><![CDATA[<h2 id="文件上传漏洞笔记"><a href="#文件上传漏洞笔记" class="headerlink" title="文件上传漏洞笔记"></a>文件上传漏洞笔记</h2><p>**1.**如果通过js过滤，可以考虑在浏览器中禁用js直接上传。</p><p>**2.**可以通过修改content-type进行绕过，如果在后端过滤，可以上传.php然后抓包修改content-type或者是上传.jpg（白名单上面的类型）抓包修改文件为.php，在前端的话就需要先上传白名单类型。</p><p>**3.**特殊后缀绕过，可以在配置文件中修改httpd-conf（Apache）文件。</p><p>找到解析php的语句（AddType application&#x2F;x-httpd-php）在后面加上想要被解析成php的文件类型（如加上.php3，则会有.php3的文件被解析为.php文件）</p><p>**4. **特殊后缀绕过另一种，采用.htaccess（注：不要带名称，为“.htaccess”，Apache）。</p><p>解释：与httpd-conf类似同样为配置文件，但是一个是全局，一个是局部（对当前目录以及子目录生效），当存在.htaccess文件时优先使用此配置文件（类比为全局变量与局部变量）。</p><p>找个空白记事本可以写上解析php的语句除了第3点写法，还有如下：</p><p>&lt;FilesMatch “1.jpg”&gt;<br>   SetHandler application&#x2F;x-httpd-php<br></FilesMatch></p><p>可以指定文件范围类的1.jpg文件解析为.php文件。</p><p>如果不行可能存在.htaccess未开启，需要在httpd-conf文件里面找到AllowOverride语句将后面的none改为ALL。</p><p>**5.**httpd-conf文件需要重启服务器后生效，.htaccess文件修改后立即生效。</p><p>httpd-conf作用：包含Apache HTTP 服务器的全局行为和默认设置。</p><p>.htaccess作用：分布式配置文件，一般用于URL重写、认证、访问控制等。</p><p>**6.**php版本可能会导致一些upload-labs失败的问题。</p><p>**7.**Windows系统类的绕过，如：加点、加空格、大写、加点加空格加点（叠加类）。</p><p>利用原理：在修改文件后缀的时候，像上面的例子系统会自动处理掉，自动删除点、空格、转变小写。</p><p>当过滤不够严格，存在此类漏洞时，可以抓包按照以上修改，虽然会显示（.php. .）但是保存的文件是.php。</p><p>针对于这个漏洞需要注意源码最后连接的是哪一部分。</p><img src="C:\Users\21396\AppData\Roaming\Typora\typora-user-images\image-20231130191650472.png" alt="image-20231130191650472"  /><p><img src="C:\Users\21396\AppData\Roaming\Typora\typora-user-images\image-20231130191151923.png" alt="image-20231130191151923"></p><p><img src="C:\Users\21396\AppData\Roaming\Typora\typora-user-images\image-20231130191212137.png" alt="image-20231130191212137"></p><p>可以发现最后连接的有$file_ext和$file_name。而在前面有一个分割函数strrchr()，从点之后进行分割，但不会改变$file_name的值，不过是给$file_ext赋值，在考虑用点过滤时候需要考虑这个连接。</p><p>**8.**php.ini与.user.ini（范围、优先级、生效方式类似于httpd-conf与.htaccess的关系一个是Apache服务器的，一个是php的）。</p><p>.user.ini  作用：特定于用户或特定目录的配置文件，通常位于Web应用程序的根目录下。用于覆盖或追加全局配置文件（如php.ini）中的PHP配置选项。</p><p>php.ini  作用：存储了对整个PHP环境生效的配置选项。通常位于PHP安装目录中。</p><p>.user.ini生效前提：php版本大于5.3.0，最好是7.X版本，ServerAPI（类似于一种协议）为CGI&#x2F;FastCGI（  phpinfo（）查看）有这个说明.user.ini可以生效。</p><p><img src="C:\Users\21396\AppData\Roaming\Typora\typora-user-images\image-20231130102106740.png" alt="image-20231130102106740"></p><p>.user.ini文件上传漏洞前提：可以生效并且上传目录中有php文件。</p><p><strong>9.</strong>  .user.ini绕过，文件包含类型。</p><p>写法如下：</p><p>Auto_prepend_file&#x3D;111.txt(这个文件里面只包含php代码)</p><p>样例：</p><p>A：echo “hello “(.php) b：echo “world”(.txt)   （在upload-labs靶场中文件是存在一个php文件的，只需要写一个auto_prepend_file&#x3D;1.jpg的.user.ini文件再将一句话木马写入1.jpg之后上传就行了)</p><p>Auto_prepend_file&#x3D;b.txt     hello world(在这个目录下，所有php文件在执行之前都会预先包含一下b.txt中的语句)</p><p>**10.**额外数据流。例如“1.txt”是一个文件，而“1.txt::$DATA”是这个文件的一个附加数据流。这样的数据流可以用于存储文件的元数据、备份信息、标签等。</p><p>:$DATA是默认的数据流，可以自己命名（如：1.txt:hello    hello为数据流名称  不要忘记文件名后面的冒号  注意：1.txt:1.txt  冒号后面1.txt就是数据流名称）。</p><p>它类似于某个文件的隐藏属性，像编辑文件后缀是不行的。大多数常规文件操作工具不会意识到这些额外的附加数据流，而只会处理默认的数据流。要访问或操作这些附加数据流，通常需要使用特定的命令行工具或者编程接口。</p><p><em>写入方法（命令行）：</em></p><p>echo “内容” &gt;&gt;文件名:数据流名  （是直接插入内容到数据流）。</p><p>type 文件名 &gt;&gt;文件名:数据流名  （是将某个文件内容插入到数据流）。</p><p><em>查看方法：</em></p><p>notepad 文件名:数据流</p><p><strong>11.</strong>::$DATA绕过，利用了数据流和Windows系统，一个文件的数据流和这个文件是两种类型，但是Windows系统中文件是不存在数据流的形式，如下：</p><p><img src="C:\Users\21396\AppData\Roaming\Typora\typora-user-images\image-20231130102610013.png" alt="image-20231130102610013"></p><p>在抓包修改后得到的是数据流的形式，但其实上传的文件已经由于Windows系统删除字符变成了.php，这时候可以删除后面的::$DATA再次访问并用蚁剑连接。</p><p>**12.**可以通过双写绕过，在一些过滤中会有删除部分都东西，可以采用双写达到绕过目的。</p><p>如：&#x2F;&#x2F;删除::$DATA      则可以用::$D::$DATAATA（保证删除一个::$DATA后能留下来一个就行，因为一般是没有循环删除）。或者是pphphp这种。</p><p><strong>13.</strong>%00(URL编码)与0x00(16进制的00)截断绕过[空字符]。</p><p>%00：主要是针对GET方式，代码审计，如果路径可以操作，可以在URL中修改，例如最后的URL为路径+文件类型，可以在路径后面写上1.php%00将后面截断，从而变成.php改变文件类型。</p><p>0x00：主要是针对POST方式，</p><p><strong>14.</strong></p>]]></content>
       
       
       
@@ -66,9 +79,9 @@
     
     
     <entry>
-      <title>电影</title>
-      <link href="/movies/index.html"/>
-      <url>/movies/index.html</url>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -88,9 +101,9 @@
     
     
     <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
+      <title>电影</title>
+      <link href="/movies/index.html"/>
+      <url>/movies/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
