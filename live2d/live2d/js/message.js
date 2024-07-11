@@ -158,7 +158,7 @@ if(!norunFlag){
 	function showHitokoto(){
 		if(sessionStorage.getItem("Sleepy")!=="1"){
 			if(!AITalkFlag){
-				$.getJSON('https://hitokoto.cn/',function(result){
+				$.getJSON('https://api.gymxbl.com/?format=json',function(result){
 					talkValTimer();
 					showMessage(result.hitokoto, 0);
 				});
