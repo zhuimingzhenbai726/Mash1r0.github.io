@@ -1,0 +1,340 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>SQL注入（二） | Mash1r0</title><meta name="author" content="Mash1r0"><meta name="copyright" content="Mash1r0"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="ffffff"><meta name="description" content="前言在SQL注入的继续学习中，和sqli-labs的刷题，再次总结一部分SQL注入知识点。 接着上次的POST的类注入，其实和GET方式的差不多，本质上是没什么区别，无非方法就是六种： 联合注入、报错注入、布尔注入、睡眠注入、堆叠注入、DNSlog外带注入。 基本方法都在前面学习过了，后面主要是waf与各种过滤了。 文件读写其实这个方法在DNSlog外带中使用过了。outfile、dumpfile">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL注入（二）">
+<meta property="og:url" content="https://mashiro726.github.io/Mash1r0/100.html">
+<meta property="og:site_name" content="Mash1r0">
+<meta property="og:description" content="前言在SQL注入的继续学习中，和sqli-labs的刷题，再次总结一部分SQL注入知识点。 接着上次的POST的类注入，其实和GET方式的差不多，本质上是没什么区别，无非方法就是六种： 联合注入、报错注入、布尔注入、睡眠注入、堆叠注入、DNSlog外带注入。 基本方法都在前面学习过了，后面主要是waf与各种过滤了。 文件读写其实这个方法在DNSlog外带中使用过了。outfile、dumpfile">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://bu.dusays.com/2024/07/08/668b8fa72dfec.jpeg">
+<meta property="article:published_time" content="2024-07-27T15:16:00.000Z">
+<meta property="article:modified_time" content="2024-07-27T15:03:27.078Z">
+<meta property="article:author" content="Mash1r0">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://bu.dusays.com/2024/07/08/668b8fa72dfec.jpeg"><link rel="shortcut icon" href="https://bu.dusays.com/2024/07/08/668b937cbe7d1.jpg"><link rel="canonical" href="https://mashiro726.github.io/Mash1r0/100.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":true,"top_n_per_article":1,"unescape":true,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简"},
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":230},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: true,
+    post: true
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":50,"languages":{"author":"作者: Mash1r0","link":"链接: ","source":"来源: Mash1r0","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体中文","cht_to_chs":"你已切换为简体中文","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#1f1f1f","position":"top-right"},
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'SQL注入（二）',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-07-27 23:03:27'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', 'ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><link rel="stylesheet" href="/live2d/live2d/css/live2d.css" /><link rel="stylesheet" href="/css/custom.css" media="defer" onload="this.media='all'"><!-- hexo injector head_end start --><link rel="stylesheet" href="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/clock.min.css" /><!-- hexo injector head_end end --><meta name="generator" content="Hexo 7.3.0"></head><body><div id="loading-box"><div class="loading-left-bg"></div><div class="loading-right-bg"></div><div class="spinner-box"><div class="configure-border-1"><div class="configure-core"></div></div><div class="configure-border-2"><div class="configure-core"></div></div><div class="loading-word">加载中...</div></div></div><script>(()=>{
+  const $loadingBox = document.getElementById('loading-box')
+  const $body = document.body
+  const preloader = {
+    endLoading: () => {
+      $body.style.overflow = ''
+      $loadingBox.classList.add('loaded')
+    },
+    initLoading: () => {
+      $body.style.overflow = 'hidden'
+      $loadingBox.classList.remove('loaded')
+    }
+  }
+
+  preloader.initLoading()
+  window.addEventListener('load',() => { preloader.endLoading() })
+
+  if (false) {
+    document.addEventListener('pjax:send', () => { preloader.initLoading() })
+    document.addEventListener('pjax:complete', () => { preloader.endLoading() })
+  }
+})()</script><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b937ccb984.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/comments/"><i class="fa-fw fas fa-envelope-open"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header" style="background-image: url('https://bu.dusays.com/2024/07/08/668b8fa72dfec.jpeg')"><nav id="nav"><span id="blog-info"><a href="/" title="Mash1r0"><span class="site-name">Mash1r0</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 列表</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/comments/"><i class="fa-fw fas fa-envelope-open"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">SQL注入（二）</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-07-27T15:16:00.000Z" title="发表于 2024-07-27 23:16:00">2024-07-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-07-27T15:03:27.078Z" title="更新于 2024-07-27 23:03:27">2024-07-27</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Web-Security/">Web安全</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="SQL注入（二）"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在SQL注入的继续学习中，和sqli-labs的刷题，再次总结一部分SQL注入知识点。</p>
+<p>接着上次的POST的类注入，其实和GET方式的差不多，本质上是没什么区别，无非方法就是六种：</p>
+<p>联合注入、报错注入、布尔注入、睡眠注入、堆叠注入、DNSlog外带注入。</p>
+<p>基本方法都在前面学习过了，后面主要是waf与各种过滤了。</p>
+<h3 id="文件读写"><a href="#文件读写" class="headerlink" title="文件读写"></a>文件读写</h3><p>其实这个方法在DNSlog外带中使用过了。outfile、dumpfile、load_file三个函数是在mysql注入中的文件读写功能。在使用这三个函数时有个前提，是在mysql.ini配置文件中有secure_file_priv，如果没有我们需要添加。作下解释：</p>
+<p><strong>secure_file_prive&#x3D;null ––限制mysqld 不允许导入导出</strong></p>
+<p><strong>secure_file_priv&#x3D;&#x2F;path&#x2F; – –限制mysqld的导入导出只能发生在默认的&#x2F;path&#x2F;目录下</strong></p>
+<p><strong>secure_file_priv&#x3D;”” – –不对mysqld 的导入 导出做限制</strong></p>
+<p>当然只有本地我们才能看到配置文件是否开启，我们在实战中可以尝试使用**@@datadir函数查看MySql存放数据文件的目录,也就是，mysql的data目录路径**</p>
+<p><strong>@@secure_file_priv函数查看权限</strong></p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272303676.png" alt="image.png"></p>
+<p>我这里主要讲解load_file()和outfile。outfile是在sq注入中唯一能够获得权限的办法，因为这个写入文件是可以写进一句话木马，以及查询语句的。</p>
+<p>给出一段payload：</p>
+<p><strong>?id&#x3D;1’ union select 1,database(),&#39;&lt;?php @eval($_POST[1]);?&gt;&#39; into outfile ‘D:\\phpstudy_pro\\WWW\\sqli-labs\\Less-7\\1.php’ –+</strong></p>
+<p>我在这里写的是一个绝对路径，也可以写相对路径，相对路径是根据前面我们查出来的路径写的，就是上面的图。绝对路径更方便让我们访问，因为我们需要web路径才能方便去访问。</p>
+<p>然后再是load_file()：</p>
+<p><strong>?id&#x3D;1’ union select 1,2,load_file(&quot;&#x2F;etc&#x2F;passwd&quot;)– -</strong></p>
+<p>这段payload就是让我们去读取文件，也是可以用绝对路径和相对路径，读取文件当然也是绝对路径好用。</p>
+<p>如果对于不好找的web路径，我们可以一起使用这两个函数进行相对路径的写入与读取，也算是一种方法。</p>
+<p>对于文件读写一般在实战中很难遇到，毕竟对数据库有很大的危害，甚至能拿到权限。</p>
+<h3 id="or和and的绕过"><a href="#or和and的绕过" class="headerlink" title="or和and的绕过"></a>or和and的绕过</h3><p>这是我们在判断数字型还是字符型经常会用到的两个函数，被过滤时一般有几种情况，</p>
+<p>比如替换函数的过滤，我们可以采用多写绕过，看替换函数执行几次，我们有时候一次是绕过不了的，可以进行多次重写。</p>
+<p>如果正则匹配不严格没有区分大小写，我们可以用大小写进行绕过。</p>
+<p>还有一种就是用逻辑符号去替换这两个函数：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272303422.png" alt="image.png"></p>
+<h3 id="空格和注释符的绕过"><a href="#空格和注释符的绕过" class="headerlink" title="空格和注释符的绕过"></a>空格和注释符的绕过</h3><p>一般来说我们可以用编码去绕过，还有+号：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302229.png" alt="image.png"></p>
+<p>mysql空白符：%09; %0A; %0B; %0D; %20;  </p>
+<p>用的最多的一般来说也就是+和%0a了。然后还可以采用&#x2F;**&#x2F;进行绕过。在绕过waf的时候发现其实内联注释和内联执行也是可以绕过的。例如&#x2F;*&#x2F;&#x2F;*&#x2F;	&#x2F;*!–+*&#x2F; 添加一些脏数据可能可以绕过去。</p>
+<p>对于一些空格的绕过，我们还可以采用()的方法去避免使用空格。比如select(database())</p>
+<p>再就是注释符的绕过，一般来说我们有– -	–+	#	%23</p>
+<p>如果被过滤了的话我们可以采用最原始的方法，去闭合后面的语句，有时候可能会报错我们可以加一些逻辑符号让后面的语句变得合理|| &amp;&amp;，然后也要注意不仅仅是添加单引号和双引号，要注意具体语句的逻辑，可能要补括号。</p>
+<p>还有就是可以采用截断的方法;%00终止这一个语句。</p>
+<h3 id="union和select的绕过"><a href="#union和select的绕过" class="headerlink" title="union和select的绕过"></a>union和select的绕过</h3><p>对于这些关键字的绕过，其实和前面的有点类似，还是替换函数与正则匹配，所以我们可以<strong>采用大小写</strong>的方法和<strong>多次重写</strong>的方法去绕过，在sqli-labs里面就有一关，union重写一次，select重写两次就可以达到绕过的目的。再就是<strong>内联执行</strong>了。</p>
+<p><strong>id&#x3D;-1&#39;&#x2F;*!UnIoN*&#x2F; SeLeCT 1,2,concat(&#x2F;*!table_name*&#x2F;) FrOM &#x2F;*information_schema*&#x2F;.tables &#x2F;*!WHERE *&#x2F;&#x2F;*!TaBlE_ScHeMa*&#x2F; like database()#</strong></p>
+<p>还有<strong>加号去拼接</strong>;</p>
+<p><strong>or ‘swords’ &#x3D;‘sw’ +’ ords’ ；EXEC(‘IN’ +’ SERT INTO ‘+’ …..’ )</strong></p>
+<p>还有使用<strong>语法新特性</strong>绕过屏蔽select具体可以参考文章：<a target="_blank" rel="noopener" href="https://blog.csdn.net/aloneBUThappy/article/details/122047088">https://blog.csdn.net/aloneBUThappy/article/details/122047088</a></p>
+<h3 id="宽字节绕过"><a href="#宽字节绕过" class="headerlink" title="宽字节绕过"></a>宽字节绕过</h3><p><code>addslashes()</code> 是 PHP 中用于转义字符串中的特殊字符的函数之一。它会在指定的预定义字符（单引号、双引号、反斜线和 NULL字符）前面添加反斜杠，以防止这些字符被误解为代码注入或其他意外操作，也是很严格的防御了SQL注入。</p>
+<p>原理就是利用宽字节字符集（如GBK）将两个字节识别为一个汉字，绕过反斜杠的转义机制，也就是添上一个字符与它给出的转义字符结合为汉字，并使得单引号逃逸，实现对数据库查询语句的篡改。</p>
+<p>西欧字母符号，通过1个字节来表示。东亚字符通过至少两个字节来表示。GBK编码就是用两个字节来表示中文区字符的一个编码标准。</p>
+<p>GBK编码依然采用双字节编码方案，其编码范围：8140－FEFE（高字节从81到FE，低字节从40到FE），剔除xx7F码位，共23940个码位。</p>
+<p>条件<br>后台使用GBK编码的时候，存在着看不见的ascii码转换为GBK编码的转换过程，可以使用宽字节注入。</p>
+<p>原理<br>编码转换存在着单字符被合并的情形</p>
+<p> 反斜杠对应url编码%5c，是单字节的。<br> 在%5c前再加入一个单字节字符%dd（范围可以是81到FE之间），就成了%dd%5c<br> 而当后端使用GBK编码的时候，会将合理的两个单字节ASCII字符解析成一个双字节的GBK编码字符</p>
+<p>参考文章：<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_43819747/article/details/136391897">https://blog.csdn.net/weixin_43819747/article/details/136391897</a></p>
+<h3 id="逗号过滤"><a href="#逗号过滤" class="headerlink" title="逗号过滤"></a>逗号过滤</h3><p>首先我们来看这样的一个语句</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302116.png" alt="image-20240727223234531"></p>
+<p>这个语句的意思是，查询u中的所有（u.*）和e中的所有（e.*），从users和emails中，然后给它们两个重命名u和e，然后限定条件，它们两个的id相同的条件。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302671.png" alt="image-20240727223436174"></p>
+<p>我们就可以得到字段的数据。然后这里用到了逗号，我们可以使用join函数来进行绕过，避免使用逗号。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302892.png" alt="image-20240727223647198"></p>
+<p>这两句话是同样的效果。至于为什么相等，我们就来说说join的本来用法。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302933.webp" alt="image.png"></p>
+<p>这是一个join的语句，这里我们还没有用on去限制条件，它让join左边的表中的每一个元素都与右边的对比一次。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302272.png" alt="image-20240727224336731"></p>
+<p>可以看到这里users中的第一行与emails中的对应，然后当我们增加了条件id相同，也就和前面的语句一样的效果了。</p>
+<p>然后我们平常用到的 union select 1,2,3等价于join的一个语句：</p>
+<p><strong>union select * from (select 1)a join (select 2)b join (select 3)c;</strong></p>
+<p>一般的payload。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302199.png" alt="image-20240727224641363"></p>
+<p>想了解更深的可以参考：</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/ChrisMurphy/p/5051664.html">https://www.cnblogs.com/ChrisMurphy/p/5051664.html</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_31620591/article/details/117067799">https://blog.csdn.net/qq_31620591/article/details/117067799</a></p>
+<h3 id="安全狗的绕过"><a href="#安全狗的绕过" class="headerlink" title="安全狗的绕过"></a>安全狗的绕过</h3><p>对于waf的绕过还是需要不断去测的，这里提供可能能够绕过的方法，因为waf也在不断更新。</p>
+<p><strong>&#x2F;*&#x2F;&#x2F;*&#x2F;&#x2F;*&#x2F;&#x2F;*&#x2F;</strong>	–&gt;	其实是两个内联注释组合</p>
+<p><strong>&#x2F;*%0axxxx*&#x2F;</strong>	–&gt;	%0a在前面也提到过了，是一个tab的代替键也是算可以当空格使用的，这里有时候也可以进行绕过一些关键字的过滤</p>
+<p><strong>&#x2F;*!11440xxxx*&#x2F;</strong>	–&gt;	内联执行，mysql中的特殊语法，只可以执行里面的命令的，然后11440是一个版本号</p>
+<p><strong>&#x2F;*!&#x2F;*&#x2F;&#x2F;*&#x2F;*&#x2F;</strong>	–&gt;	算是多层嵌套，将前面的几种方法组合也可能能进行绕过。</p>
+<p><strong>from&#x2F;*!–+*&#x2F;&#x2F;*%0ainformation_schema.&#x2F;*!schemata*&#x2F;– -</strong>	–&gt;	一个具体的绕过例子，也可以直接复制粘贴尝试一下。</p>
+<p>下面是可能有效的办法。</p>
+<p><strong>大小写</strong><br><strong>双写</strong><br><strong>%0a</strong><br><strong>;00</strong><br><strong>;%00</strong></p>
+<p><strong>wtf-int</strong><br><strong>+</strong><br><strong>json_arrayagg等替换函数</strong>   </p>
+<p><strong>切片、脏字符</strong></p>
+<p>这里解释一下切片的方法，利用我们bp里面的插件将数据包以多个发送，下面是例子。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272302788.webp" alt="image.png"></p>
+<p>这是一个chunked的协议，一段编码。具体了解可以参考：<a target="_blank" rel="noopener" href="https://blog.csdn.net/yeyiqun/article/details/99311072">https://blog.csdn.net/yeyiqun/article/details/99311072</a></p>
+<p>可以看出每一段编码的下面有一个或者几个字母，并不是一起发送的，有时候我们也可以用这种方式绕过。</p>
+<p>上面的绕过方法不是通用的要看具体的环境才行。</p>
+<p>安全狗补充：</p>
+<p>对于多个关键词连在一起就会报错的，我们可以考虑使用一种换行的办法，这里我们那union select举例，假设它们不能同时出现，我们可以尝试用union–+b%0Aselect 这里有个注释，然后后面有个字符，有个换行，它在计算机眼中，union的后面是个a，但其实我们知道，a被注释掉了，给出样式。</p>
+<p><strong>union –+ a</strong></p>
+<p><strong>select</strong></p>
+<p>这样也就可以达成绕过的目的。</p>
+<p>然后再就是一些替换函数：</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272301023.webp" alt="image.png"></p>
+<p>还有一个是用到了join去绕过，在3.5的版本中的无列名报错注入。这里就不再介绍join函数了。我们直接讲payload。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272301019.webp" alt="image.png"></p>
+<p>我们可以利用using这个函数报错得到列名。using是一个简化连接函数。</p>
+<p>具体函数解析：<a target="_blank" rel="noopener" href="https://blog.csdn.net/shadow_zed/article/details/89083383">https://blog.csdn.net/shadow_zed/article/details/89083383</a></p>
+<p>我们利用这个函数去连接得到的username，它会把password爆出来。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272301255.webp" alt="image.png"></p>
+<p>接着去爆。</p>
+<p><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202407272301989.webp" alt="image.png"></p>
+<p>发现最后没有报错了，也就得到所有的了。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://mashiro726.github.io">Mash1r0</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://mashiro726.github.io/Mash1r0/100.html">https://mashiro726.github.io/Mash1r0/100.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://mashiro726.github.io" target="_blank">Mash1r0</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://bu.dusays.com/2024/07/08/668b8fa72dfec.jpeg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/Mash1r0/44b2b6e9.html" title="ctfshow信息收集web1-20"><img class="cover" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8f1a1a2ae.jpeg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">ctfshow信息收集web1-20</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b937ccb984.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">Mash1r0</div><div class="author-info__description">你想要变成什么颜色？</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">1</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/mashiro726"><i class="fab fa-github"></i><span>前往樱花庄...</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/mashiro726" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:213966716@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">关于友链，关于web安全交流可联系我,qq:213966716</div></div><div class="xpand" style="height:200px;"><canvas class="illo" width="800" height="800" style="max-width: 200px; max-height: 200px; touch-action: none; width: 640px; height: 640px;"></canvas></div><script src="https://fastly.jsdelivr.net/gh/xiaopengand/blogCdn@latest/xzxr/twopeople1.js"></script><script src="https://fastly.jsdelivr.net/gh/xiaopengand/blogCdn@latest/xzxr/zdog.dist.js"></script><script id="rendered-js" src="https://fastly.jsdelivr.net/gh/xiaopengand/blogCdn@latest/xzxr/twopeople.js"></script><style>.card-widget.card-announcement {
+margin: 0;
+align-items: center;
+justify-content: center;
+text-align: center;
+}
+canvas {
+display: block;
+margin: 0 auto;
+cursor: move;
+}</style><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E4%BB%B6%E8%AF%BB%E5%86%99"><span class="toc-text">文件读写</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#or%E5%92%8Cand%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-text">or和and的绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A9%BA%E6%A0%BC%E5%92%8C%E6%B3%A8%E9%87%8A%E7%AC%A6%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-text">空格和注释符的绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#union%E5%92%8Cselect%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-text">union和select的绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%BD%E5%AD%97%E8%8A%82%E7%BB%95%E8%BF%87"><span class="toc-text">宽字节绕过</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%97%E5%8F%B7%E8%BF%87%E6%BB%A4"><span class="toc-text">逗号过滤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E7%8B%97%E7%9A%84%E7%BB%95%E8%BF%87"><span class="toc-text">安全狗的绕过</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/Mash1r0/100.html" title="SQL注入（二）"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8fa72dfec.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="SQL注入（二）"/></a><div class="content"><a class="title" href="/Mash1r0/100.html" title="SQL注入（二）">SQL注入（二）</a><time datetime="2024-07-27T15:16:00.000Z" title="发表于 2024-07-27 23:16:00">2024-07-27</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mash1r0/44b2b6e9.html" title="ctfshow信息收集web1-20"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8f1a1a2ae.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="ctfshow信息收集web1-20"/></a><div class="content"><a class="title" href="/Mash1r0/44b2b6e9.html" title="ctfshow信息收集web1-20">ctfshow信息收集web1-20</a><time datetime="2024-07-19T01:37:33.000Z" title="发表于 2024-07-19 09:37:33">2024-07-19</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mash1r0/a2cb01a4.html" title="永恒之黑漏洞复现（CVE-2020-0796）"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8fa6e5d54.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="永恒之黑漏洞复现（CVE-2020-0796）"/></a><div class="content"><a class="title" href="/Mash1r0/a2cb01a4.html" title="永恒之黑漏洞复现（CVE-2020-0796）">永恒之黑漏洞复现（CVE-2020-0796）</a><time datetime="2024-07-11T15:26:16.000Z" title="发表于 2024-07-11 23:26:16">2024-07-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mash1r0/1.html" title="PHP反序列化部分知识点"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8f3a9731e.jpeg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="PHP反序列化部分知识点"/></a><div class="content"><a class="title" href="/Mash1r0/1.html" title="PHP反序列化部分知识点">PHP反序列化部分知识点</a><time datetime="2024-07-08T04:02:14.000Z" title="发表于 2024-07-08 12:02:14">2024-07-08</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/Mash1r0/fb7b82f0.html" title="文件上传部分知识点"><img src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://bu.dusays.com/2024/07/08/668b8f465095b.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="文件上传部分知识点"/></a><div class="content"><a class="title" href="/Mash1r0/fb7b82f0.html" title="文件上传部分知识点">文件上传部分知识点</a><time datetime="2024-07-08T01:03:14.000Z" title="发表于 2024-07-08 09:03:14">2024-07-08</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2024 By Mash1r0</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="/js/tw_cn.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@5.2.0/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.8/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu@4.0.7/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
+
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
+
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"></div><div id="landlord" style="left:5px;bottom:0px;"><div class="message" style="opacity:0"></div><canvas id="live2d" width="500" height="560" class="live2d"></canvas><div class="live_talk_input_body"><div class="live_talk_input_name_body"><input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" /></div><div class="live_talk_input_text_body"><input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/><button type="button" class="live_talk_send_btn" id="talk_send">发送</button></div></div><input name="live_talk" id="live_talk" value="1" type="hidden" /><div class="live_ico_box"><div class="live_ico_item type_info" id="showInfoBtn"></div><div class="live_ico_item type_talk" id="showTalkBtn"></div><div class="live_ico_item type_huanzhuang" id="huanzhuangButton"></div><div class="live_ico_item type_music" id="musicButton"></div><div class="live_ico_item type_youdu" id="youduButton"></div><div class="live_ico_item type_quit" id="hideButton"></div><input name="live_statu_val" id="live_statu_val" value="0" type="hidden" /><audio src="" style="display:none;" id="live2d_bgm" data-bgm="0" preload="none"></audio><input name="live2dBGM" value="live2d/live2d/mashiro1.mp3" type="hidden"><input name="live2dBGM" value="live2d/live2d/mashiro.mp3" type="hidden"><input id="duType" value="douqilai,l2d_caihong" type="hidden"></div></div><div id="open_live2d">召唤看板娘</div><script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js"></script><script>var message_Path = '/live2d/live2d/';var talkAPI = "https://api.aigc2d.com/v1/chat/completions";</script><script type="text/javascript" src="live2d/live2d/js/live2d.js"></script><script type="text/javascript" src="live2d/live2d/js/message.js"></script><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="50" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/canvas-nest.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><script id="click-heart" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/click-heart.min.js" async="async" mobile="true"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div><!-- hexo injector body_end start --> <script data-pjax>if(document.getElementById('recent-posts') && (location.pathname ==='/'|| '/' ==='all')){
+    var parent = document.getElementById('recent-posts');
+    var child = '<div class="recent-post-item" style="width:100%;height: auto"><div id="catalog_magnet"><div class="magnet_item"><a class="magnet_link" href="https://mashiro726.github.io/categories/Web-Security/"><div class="magnet_link_context" style=""><span style="font-weight:500;flex:1">📚 Web (6)</span><span style="padding:0px 4px;border-radius: 8px;"><i class="fas fa-arrow-circle-right"></i></span></div></a></div><div class="magnet_item" style="visibility: hidden"></div><a class="magnet_link_more"  href="https://mashiro726.github.io/categories" style="flex:1;text-align: center;margin-bottom: 10px;">查看更多...</a></div></div>';
+    console.log('已挂载magnet')
+    parent.insertAdjacentHTML("afterbegin",child)}
+     </script><style>#catalog_magnet{flex-wrap: wrap;display: flex;width:100%;justify-content:space-between;padding: 10px 10px 0 10px;align-content: flex-start;}.magnet_item{flex-basis: calc(50% - 5px);background: #f2f2f2;margin-bottom: 10px;border-radius: 8px;transition: all 0.2s ease-in-out;}.magnet_item:hover{background: #f577bb}.magnet_link_more{color:#555}.magnet_link{color:black}.magnet_link:hover{color:white}@media screen and (max-width: 600px) {.magnet_item {flex-basis: 100%;}}.magnet_link_context{display:flex;padding: 10px;font-size:16px;transition: all 0.2s ease-in-out;}.magnet_link_context:hover{padding: 10px 20px;}</style>
+    <style></style><script data-pjax>
+  function butterfly_clock_anzhiyu_injector_config(){
+    var parent_div_git = document.getElementsByClassName('sticky_layout')[0];
+    var item_html = '<div class="card-widget card-clock"><div class="card-glass"><div class="card-background"><div class="card-content"><div id="hexo_electric_clock"><img class="entered loading" id="card-clock-loading" src= "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" data-lazy-src="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/loading.gif" style="height: 120px; width: 100%;" data-ll-status="loading"/></div></div></div></div></div>';
+    console.log('已挂载butterfly_clock_anzhiyu')
+    if(parent_div_git) {
+      parent_div_git.insertAdjacentHTML("afterbegin",item_html)
+    }
+  }
+  var elist = 'null'.split(',');
+  var cpage = location.pathname;
+  var epage = 'all';
+  var qweather_key = 'd3070e907a744f7bbeb4d53a31630a51';
+  var gaud_map_key = '9cb80d47a84c8176932f29201c4ddfa2';
+  var baidu_ak_key = 'undefined';
+  var flag = 0;
+  var clock_rectangle = '112.982279,28.19409';
+  var clock_default_rectangle_enable = 'false';
+
+  for (var i=0;i<elist.length;i++){
+    if (cpage.includes(elist[i])){
+      flag++;
+    }
+  }
+
+  if ((epage ==='all')&&(flag == 0)){
+    butterfly_clock_anzhiyu_injector_config();
+  }
+  else if (epage === cpage){
+    butterfly_clock_anzhiyu_injector_config();
+  }
+  </script><script src="https://widget.qweather.net/simple/static/js/he-simple-common.js?v=2.0"></script><script data-pjax src="https://cdn.cbd.int/hexo-butterfly-clock-anzhiyu/lib/clock.min.js"></script><!-- hexo injector body_end end --></body></html>
