@@ -4,6 +4,25 @@
   
     
     <entry>
+      <title>记第一次靶机DC-1</title>
+      <link href="/Mash1r0/222.html"/>
+      <url>/Mash1r0/222.html</url>
+      
+        <content type="html"><![CDATA[<p>关于VirtualBox的一些问题这里首先要注意兼容的问题，有些不是特别支持win11，可以使用最新版。</p><p>关于安装路径，我们可以做一个欺骗，它的初识安装路径是在c盘，我们先在F盘创建一个VirtualBox的文件，然后</p><p>改掉C为D，然后再换为F，后面的路径都要手打，然后就可以安装成功了。</p><p>然后导入DC-1靶机就可以了。<br><a href="https://blog.csdn.net/qq_45730349/article/details/121470304">解决VirtualBox的Error In supR3HardenedWinReSpawn ， Error relauching VirtualBox VM process:5 的问题-CSDN博客</a><br>然后我们可以设置仅主机或者是桥接里面选择自己的网卡。</p><p>我们开启DC-1靶机之后。</p><p>在kali里面先扫一下同一区域中存活的主机。</p><blockquote><p>arp-scan -l</p></blockquote><p><strong>-l 使用网络接口</strong></p><p>开启关闭靶机可以发现有一个ip有变化，那个就是我们靶机的ip</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012217097.png" alt="image.png"></p><p>我们拿到一个靶机的ip地址，先用nmap扫端口。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012217581.png" alt="image.png"></p><p>扫出来22,80,111,55208端口。我们尝试去访问80端口。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012218807.png" alt="image-20240801220958896"></p><p>发现有个Drupal，是个框架我们尝试去找它的版本号。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012218385.png" alt="image-20240801221018974"></p><p>发现版本是7，我们去谷歌找漏洞。</p><p>也可以直接在kali里面找。</p><p>我们先看看漏洞库。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012218182.png" alt="image-20240801221054746"></p><p>发现有很多，我们可以过滤一下，只要RCE有关的漏洞，去getshell。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012218377.png" alt="image-20240801221144027"></p><p>这有几个可以利用，但是好像没有使用说明。使用难度有点大，我们接着看另一个漏洞库。用msfconsole里面的</p><p>漏洞库。</p><p>先输入命令进入msf</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012218908.png" alt="image.png"></p><p>然后输入search drupal命令去寻找有关漏洞。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219350.png" alt="image.png"></p><p>尽量去找excellent的，好用一点。这里我们用1（注意是从0开始的）</p><p>use 1</p><p>使用第二个模块。</p><p>然后show options 查看我们需要添加什么参数。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219795.png" alt="image.png"></p><p>yes就是我们需要的参数，有些默认的不用动，把空着的rhosts补上，这是目标靶机的ip，后面的lhosts也改掉，</p><p>这是对应我们自己kali的ip。</p><p>set开始设置。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219984.png" alt="image.png"></p><p>然后run开始等待。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219983.png" alt="image.png"></p><p>这个样子就是可以了，我们打个shell。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219212.png" alt="image.png"></p><p>发现命令可以执行。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219820.png" alt="image.png"></p><blockquote><p>好的cms需要配置文件，你也一样。</p></blockquote><p>我们去查看配置文件。</p><p>我们上网可以查到drupal的配置文件的位置。</p><blockquote><p>&#x2F;var&#x2F;www&#x2F;sites&#x2F;default&#x2F;settings.php</p></blockquote><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012219332.png" alt="image.png"></p><p>这里得到了flag2和数据库的信息。</p><p> flag2：暴力破解和字典攻击不是（获得访问权限的）唯一方式（你确实需要访问权限)。 你能用这些凭据做什</p><p>么？  </p><blockquote><p>database：drupaldb<br>username：dbuser<br>password：R0ck3t</p></blockquote><p>我们查看&#x2F;etc&#x2F;passwd可以看到flag4，先留着。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220931.png" alt="image.png"><br><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220337.png" alt="image.png"></p><blockquote><p> 你可以使用相同的方法来查找或访问root目录中的flag吗？  </p></blockquote><p>我们通过前面的数据库名和密码直接连接。</p><blockquote><p>mysql -u dbuser -p<br>R0ck3t</p></blockquote><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220909.png" alt="image.png"></p><p>这里有个很奇怪的地方，语句执行成功后没有回显，当我们想办法报错之后就能回显了，所以高效的查出信息有点</p><p>麻烦。</p><p>我们直接去看drupaldb这个数据库。</p><p>出现了很多东西，吸引我的是user，我们尝试去看一下。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220126.png" alt="image.png"></p><p>成功查到两个user的信息。不难发现两个的密码都进行了加密。</p><p>我们尝试去改密码，或者新加一个用户。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220432.png" alt="image.png"></p><p><a href="http://drupalchina.cn/node/2128">分享：忘记Drupal的管理员密码的解决办法 | Drupal China</a></p><p>我们将这个加密后的直接拿过来，用update语句对admin的密码更新。</p><blockquote><p>$S$DMtruNEVmqWoqhlPwTlnFzwyBRFgQwXUfppe9pW1RqqXlMy97tzA </p></blockquote><p> 更新后就是admin admin了。我们直接登录。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220133.png" alt="image.png"></p><p>成功登录，在里面看看有没有有用的信息。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012220801.png" alt="image.png"></p><p>我们在左上角的find content找到两篇文章，main里面是一堆不能直接翻译的东西，我们直接去看flag3。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221800.png" alt="image.png"></p><blockquote><p> 特殊的权限（PERMS）将帮助找到密码（passwd），但你需要执行（-exec）那个命令来弄清楚如何获取shadow文件中的内容。</p></blockquote><p>我们问问-exec可以干什么。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221235.png" alt="image.png"></p><p>尝试了半天还是有点问题，再问一次吧。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221115.png" alt="image.png"></p><blockquote><p>find &#x2F;etc&#x2F;shadow -exec cat {} ;</p></blockquote><p>这里一定不要忘记后面的分号。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221536.png" alt="image.png"></p><p>我们拿到了加密后的账号密码。</p><blockquote><p>username：</p><p>$6$rhe3rFqk$NwHzwJ4H7abOFOM67.Avwl3j8c05rDVPqTIvWg8k3yWe99pivz</p><p>password：</p><p>96.K7IqPlbBCmzpokVmn13ZhVyQGrQ4phd</p></blockquote><p>这里可以回想一下flag4了。去找root里面的flag。还是老样子。</p><blockquote><p>find &#x2F;root&#x2F; -exec ls -al ;</p></blockquote><p>然后发现找不到flag。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221810.png" alt="image.png"></p><p>有点奇怪，我们再看看find &#x2F;root，发现有一个flag，我们用之前的命令去读取就行了。</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012221961.png" alt="image.png"></p><p>对于前面那个命令为什么不行，后面发现：</p><blockquote><p>find &#x2F;root -exec ls &#x2F;root -a ;</p></blockquote><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012222426.png" alt="image.png"></p><p>然后我发现，这个回显次数很少。我的猜测是find查出来的回显行数是后面命令执行后的回显次数。</p><p>然后也可以参考下ai的解释：</p><p><img src="https://raw.githubusercontent.com/Mashiro726/mash1r0img/main/jpg/202408012222232.png" alt=")I6U$WH7_MWHRSUM8NGN$7Y_tmb.png"></p><p>对于这个靶机看了下其他师傅的做法发现还可以通过flag4账户，ssh连接靶机，直接成为root用户，但需要进行账</p><p>号密码的爆破。</p><p>可以参考：<a href="https://www.jianshu.com/p/86b3c598a4c4">Vulnhub靶机渗透测试——DC-1</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Web安全 </category>
+          
+      </categories>
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>SQL注入（二）</title>
       <link href="/Mash1r0/100.html"/>
       <url>/Mash1r0/100.html</url>
@@ -121,11 +140,33 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
+      <title></title>
+      <link href="/css/universe.css"/>
+      <url>/css/universe.css</url>
       
-        <content type="html"><![CDATA[]]></content>
+        <content type="html"><![CDATA[/* 背景宇宙星光  */#universe{  display: block;  position: fixed;  margin: 0;  padding: 0;  border: 0;  outline: 0;  left: 0;  top: 0;  width: 100%;  height: 100%;  pointer-events: none;  /* 这个是调置顶的优先级的，-1在文章页下面，背景上面，个人推荐这种 */  z-index: -1;}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/js/universe.js"/>
+      <url>/js/universe.js</url>
+      
+        <content type="html"><![CDATA[function dark() {window.requestAnimationFrame=window.requestAnimationFrame||window.mozRequestAnimationFrame||window.webkitRequestAnimationFrame||window.msRequestAnimationFrame;var n,e,i,h,t=.05,s=document.getElementById("universe"),o=!0,a="180,184,240",r="226,225,142",d="226,225,224",c=[];function f(){n=window.innerWidth,e=window.innerHeight,i=.216*n,s.setAttribute("width",n),s.setAttribute("height",e)}function u(){h.clearRect(0,0,n,e);for(var t=c.length,i=0;i<t;i++){var s=c[i];s.move(),s.fadeIn(),s.fadeOut(),s.draw()}}function y(){this.reset=function(){this.giant=m(3),this.comet=!this.giant&&!o&&m(10),this.x=l(0,n-10),this.y=l(0,e),this.r=l(1.1,2.6),this.dx=l(t,6*t)+(this.comet+1-1)*t*l(50,120)+2*t,this.dy=-l(t,6*t)-(this.comet+1-1)*t*l(50,120),this.fadingOut=null,this.fadingIn=!0,this.opacity=0,this.opacityTresh=l(.2,1-.4*(this.comet+1-1)),this.do=l(5e-4,.002)+.001*(this.comet+1-1)},this.fadeIn=function(){this.fadingIn&&(this.fadingIn=!(this.opacity>this.opacityTresh),this.opacity+=this.do)},this.fadeOut=function(){this.fadingOut&&(this.fadingOut=!(this.opacity<0),this.opacity-=this.do/2,(this.x>n||this.y<0)&&(this.fadingOut=!1,this.reset()))},this.draw=function(){if(h.beginPath(),this.giant)h.fillStyle="rgba("+a+","+this.opacity+")",h.arc(this.x,this.y,2,0,2*Math.PI,!1);else if(this.comet){h.fillStyle="rgba("+d+","+this.opacity+")",h.arc(this.x,this.y,1.5,0,2*Math.PI,!1);for(var t=0;t<30;t++)h.fillStyle="rgba("+d+","+(this.opacity-this.opacity/20*t)+")",h.rect(this.x-this.dx/4*t,this.y-this.dy/4*t-2,2,2),h.fill()}else h.fillStyle="rgba("+r+","+this.opacity+")",h.rect(this.x,this.y,this.r,this.r);h.closePath(),h.fill()},this.move=function(){this.x+=this.dx,this.y+=this.dy,!1===this.fadingOut&&this.reset(),(this.x>n-n/4||this.y<0)&&(this.fadingOut=!0)},setTimeout(function(){o=!1},50)}function m(t){return Math.floor(1e3*Math.random())+1<10*t}function l(t,i){return Math.random()*(i-t)+t}f(),window.addEventListener("resize",f,!1),function(){h=s.getContext("2d");for(var t=0;t<i;t++)c[t]=new y,c[t].reset();u()}(),function t(){document.getElementsByTagName('html')[0].getAttribute('data-theme')=='dark'&&u(),window.requestAnimationFrame(t)}()};dark()]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <url>/about/index.html</url>
+      
+        <content type="html"><![CDATA[<p>想走渗透方向的安全小白…</p>]]></content>
       
     </entry>
     
@@ -154,11 +195,11 @@
     
     
     <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <url>/about/index.html</url>
+      <title></title>
+      <link href="/live2d/demo.html"/>
+      <url>/live2d/demo.html</url>
       
-        <content type="html"><![CDATA[<p>想走渗透方向的安全小白…</p>]]></content>
+        <content type="html"><![CDATA[<!DOCTYPE html><html><head>    <meta charset="utf-8"><title>Live2D！</title>    <link rel="stylesheet" href="live2d/css/live2d.css" />    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"></head><body><div id="landlord" style="left:5px;bottom:0px;">    <div class="message" style="opacity:0"></div>    <canvas id="live2d" width="500" height="560" class="live2d"></canvas>    <div class="live_talk_input_body">    <div class="live_talk_input_name_body">        <input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" />        </div>        <div class="live_talk_input_text_body">        <input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/>            <button type="button" class="live_talk_send_btn" id="talk_send">发送</button>        </div>    </div>    <input name="live_talk" id="live_talk" value="1" type="hidden" />    <div class="live_ico_box">    <div class="live_ico_item type_info" id="showInfoBtn"></div>        <div class="live_ico_item type_talk" id="showTalkBtn"></div>        <div class="live_ico_item type_huanzhuang" id="huanzhuangButton"></div>        <div class="live_ico_item type_music" id="musicButton"></div>        <div class="live_ico_item type_youdu" id="youduButton"></div>        <div class="live_ico_item type_quit" id="hideButton"></div>        <input name="live_statu_val" id="live_statu_val" value="0" type="hidden" />        <audio src="" style="display:none;" id="live2d_bgm" data-bgm="0" preload="none"></audio>        <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p4qbp15idv6bl55h381moha.mp3" type="hidden">        <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p8frrlmf1aled1e14m56una.mp3" type="hidden">        <input id="duType" value="douqilai,l2d_caihong" type="hidden">    </div></div><div id="open_live2d">召唤看板娘</div><script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js"></script><script>var message_Path = './live2d/';//资源目录，如果目录不对请更改var talkAPI = "";//如果有类似图灵机器人的聊天接口请填写接口路径</script><script type="text/javascript" src="live2d/js/live2d.js"></script><script type="text/javascript" src="live2d/js/message.js"></script></body></html>]]></content>
       
     </entry>
     
@@ -176,20 +217,9 @@
     
     
     <entry>
-      <title></title>
-      <link href="/js/universe.js"/>
-      <url>/js/universe.js</url>
-      
-        <content type="html"><![CDATA[function dark() {window.requestAnimationFrame=window.requestAnimationFrame||window.mozRequestAnimationFrame||window.webkitRequestAnimationFrame||window.msRequestAnimationFrame;var n,e,i,h,t=.05,s=document.getElementById("universe"),o=!0,a="180,184,240",r="226,225,142",d="226,225,224",c=[];function f(){n=window.innerWidth,e=window.innerHeight,i=.216*n,s.setAttribute("width",n),s.setAttribute("height",e)}function u(){h.clearRect(0,0,n,e);for(var t=c.length,i=0;i<t;i++){var s=c[i];s.move(),s.fadeIn(),s.fadeOut(),s.draw()}}function y(){this.reset=function(){this.giant=m(3),this.comet=!this.giant&&!o&&m(10),this.x=l(0,n-10),this.y=l(0,e),this.r=l(1.1,2.6),this.dx=l(t,6*t)+(this.comet+1-1)*t*l(50,120)+2*t,this.dy=-l(t,6*t)-(this.comet+1-1)*t*l(50,120),this.fadingOut=null,this.fadingIn=!0,this.opacity=0,this.opacityTresh=l(.2,1-.4*(this.comet+1-1)),this.do=l(5e-4,.002)+.001*(this.comet+1-1)},this.fadeIn=function(){this.fadingIn&&(this.fadingIn=!(this.opacity>this.opacityTresh),this.opacity+=this.do)},this.fadeOut=function(){this.fadingOut&&(this.fadingOut=!(this.opacity<0),this.opacity-=this.do/2,(this.x>n||this.y<0)&&(this.fadingOut=!1,this.reset()))},this.draw=function(){if(h.beginPath(),this.giant)h.fillStyle="rgba("+a+","+this.opacity+")",h.arc(this.x,this.y,2,0,2*Math.PI,!1);else if(this.comet){h.fillStyle="rgba("+d+","+this.opacity+")",h.arc(this.x,this.y,1.5,0,2*Math.PI,!1);for(var t=0;t<30;t++)h.fillStyle="rgba("+d+","+(this.opacity-this.opacity/20*t)+")",h.rect(this.x-this.dx/4*t,this.y-this.dy/4*t-2,2,2),h.fill()}else h.fillStyle="rgba("+r+","+this.opacity+")",h.rect(this.x,this.y,this.r,this.r);h.closePath(),h.fill()},this.move=function(){this.x+=this.dx,this.y+=this.dy,!1===this.fadingOut&&this.reset(),(this.x>n-n/4||this.y<0)&&(this.fadingOut=!0)},setTimeout(function(){o=!1},50)}function m(t){return Math.floor(1e3*Math.random())+1<10*t}function l(t,i){return Math.random()*(i-t)+t}f(),window.addEventListener("resize",f,!1),function(){h=s.getContext("2d");for(var t=0;t<i;t++)c[t]=new y,c[t].reset();u()}(),function t(){document.getElementsByTagName('html')[0].getAttribute('data-theme')=='dark'&&u(),window.requestAnimationFrame(t)}()};dark()]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>标签</title>
-      <link href="/tags/index.html"/>
-      <url>/tags/index.html</url>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
@@ -209,33 +239,11 @@
     
     
     <entry>
-      <title></title>
-      <link href="/live2d/live2d/message.json"/>
-      <url>/live2d/live2d/message.json</url>
+      <title>标签</title>
+      <link href="/tags/index.html"/>
+      <url>/tags/index.html</url>
       
-        <content type="html"><![CDATA[{"mouseover":[{"selector":"#showInfoBtn","text":["查看最新吐槽和站内信息"]},{"selector":"#showTalkBtn","text":["要和我聊天吗？"]},{"selector":"#hideButton","text":["要说再见了吗？"]},{"selector":"#musicButton","text":["给页面加点音乐吗？"]},{"selector":"#youduButton","text":["按钮有毒，癫痫患者不要开启！！！<br>点一下开启，再点一下可以关闭。"]},{"selector":"#huanzhuangButton","text":["要换一套衣服吗？"]},{"selector":".article-title","text":["要看看 {text} 么？"]},{"selector":".searchbox","text":["在找什么东西呢，需要帮忙吗？"]}],"click":[{"selector":"#landlord #live2d","text":["呐，你想变成什么颜色？","如果是这样的话，那就从我的心中滚出去。","因为有以后，所以才有趣。","如果因为害怕失败，而不去努力，那就不会有能够成功的人。","要抹去懊悔，终究只有继续不断努力。"]}]}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/css/universe.css"/>
-      <url>/css/universe.css</url>
-      
-        <content type="html"><![CDATA[/* 背景宇宙星光  */#universe{  display: block;  position: fixed;  margin: 0;  padding: 0;  border: 0;  outline: 0;  left: 0;  top: 0;  width: 100%;  height: 100%;  pointer-events: none;  /* 这个是调置顶的优先级的，-1在文章页下面，背景上面，个人推荐这种 */  z-index: -1;}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/demo.html"/>
-      <url>/live2d/demo.html</url>
-      
-        <content type="html"><![CDATA[<!DOCTYPE html><html><head>    <meta charset="utf-8"><title>Live2D！</title>    <link rel="stylesheet" href="live2d/css/live2d.css" />    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"></head><body><div id="landlord" style="left:5px;bottom:0px;">    <div class="message" style="opacity:0"></div>    <canvas id="live2d" width="500" height="560" class="live2d"></canvas>    <div class="live_talk_input_body">    <div class="live_talk_input_name_body">        <input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" />        </div>        <div class="live_talk_input_text_body">        <input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/>            <button type="button" class="live_talk_send_btn" id="talk_send">发送</button>        </div>    </div>    <input name="live_talk" id="live_talk" value="1" type="hidden" />    <div class="live_ico_box">    <div class="live_ico_item type_info" id="showInfoBtn"></div>        <div class="live_ico_item type_talk" id="showTalkBtn"></div>        <div class="live_ico_item type_huanzhuang" id="huanzhuangButton"></div>        <div class="live_ico_item type_music" id="musicButton"></div>        <div class="live_ico_item type_youdu" id="youduButton"></div>        <div class="live_ico_item type_quit" id="hideButton"></div>        <input name="live_statu_val" id="live_statu_val" value="0" type="hidden" />        <audio src="" style="display:none;" id="live2d_bgm" data-bgm="0" preload="none"></audio>        <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p4qbp15idv6bl55h381moha.mp3" type="hidden">        <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p8frrlmf1aled1e14m56una.mp3" type="hidden">        <input id="duType" value="douqilai,l2d_caihong" type="hidden">    </div></div><div id="open_live2d">召唤看板娘</div><script type="text/javascript" src="https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js"></script><script>var message_Path = './live2d/';//资源目录，如果目录不对请更改var talkAPI = "";//如果有类似图灵机器人的聊天接口请填写接口路径</script><script type="text/javascript" src="live2d/js/live2d.js"></script><script type="text/javascript" src="live2d/js/message.js"></script></body></html>]]></content>
+        <content type="html"><![CDATA[]]></content>
       
     </entry>
     
@@ -247,6 +255,28 @@
       <url>/live2d/live2d/html/live2d.html</url>
       
         <content type="html"><![CDATA[<!DOCTYPE html><html lang="zh-CN"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>Document</title></head><body>    <div id="landlord" style="left:5px;bottom:0px;">        <div class="message" style="opacity:0"></div>        <canvas id="live2d" width="500" height="560" class="live2d"></canvas>        <div class="live_talk_input_body">            <div class="live_talk_input_name_body">                <input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" />            </div>            <div class="live_talk_input_text_body">                <input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/>                <button type="button" class="live_talk_send_btn" id="talk_send">发送</button>            </div>        </div>        <input name="live_talk" id="live_talk" value="1" type="hidden" />        <div class="live_ico_box">            <div class="live_ico_item type_info" id="showInfoBtn"></div>            <div class="live_ico_item type_talk" id="showTalkBtn"></div>            <div class="live_ico_item type_huanzhuang" id="huanzhuangButton"></div>            <div class="live_ico_item type_music" id="musicButton"></div>            <div class="live_ico_item type_youdu" id="youduButton"></div>            <div class="live_ico_item type_quit" id="hideButton"></div>            <input name="live_statu_val" id="live_statu_val" value="0" type="hidden" />            <audio src="" style="display:none;" id="live2d_bgm" data-bgm="0" preload="none"></audio>            <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p4qbp15idv6bl55h381moha.mp3" type="hidden">            <input name="live2dBGM" value="https://t1.aixinxi.net/o_1c52p8frrlmf1aled1e14m56una.mp3" type="hidden">            <input id="duType" value="douqilai,l2d_caihong" type="hidden">        </div>    </div>    <div id="open_live2d">召唤看板娘</div></body></html>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/README.html"/>
+      <url>/live2d/README.html</url>
+      
+        <content type="html"><![CDATA[<h1 id="Live2d的看板娘——蕾姆-Rem"><a href="#Live2d的看板娘——蕾姆-Rem" class="headerlink" title="Live2d的看板娘——蕾姆(Rem)"></a>Live2d的看板娘——蕾姆(Rem)</h1><h4 id="伊斯特瓦尔点这里。"><a href="#伊斯特瓦尔点这里。" class="headerlink" title="伊斯特瓦尔点这里。"></a><a href="https://www.wikimoe.com/?post=76">伊斯特瓦尔点这里</a>。</h4><h4 id="基于《给博客添加能动的看板娘-Live2D-将其添加到网页上吧》上的源码进行修改。"><a href="#基于《给博客添加能动的看板娘-Live2D-将其添加到网页上吧》上的源码进行修改。" class="headerlink" title="基于《给博客添加能动的看板娘(Live2D)-将其添加到网页上吧》上的源码进行修改。"></a>基于<a href="https://imjad.cn/archives/lab/add-dynamic-poster-girl-with-live2d-to-your-blog-02">《给博客添加能动的看板娘(Live2D)-将其添加到网页上吧》</a>上的源码进行修改。</h4><h4 id="在原先的基础上加上了如下功能："><a href="#在原先的基础上加上了如下功能：" class="headerlink" title="在原先的基础上加上了如下功能："></a>在原先的基础上加上了如下功能：</h4><pre><code>1.可以基于图灵机器人的聊天功能（需要自己写接口，默认隐藏）。2.能够随意移动并记录位置（关闭浏览器后失效）。3.能够随意唤醒或者关闭并记录状态。4.自动判断浏览器是否为IE或者手机浏览器，如果判断为true则不加载伊斯。5.给骚扰加了限制频率，不能狂骚扰了。</code></pre><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>首先下载代码。</p><p>然后把解压出来的文件夹改名为：live2d 。</p><h3 id="正式开工，文字部分参考自在-Web-上展示-Live2D-吧！"><a href="#正式开工，文字部分参考自在-Web-上展示-Live2D-吧！" class="headerlink" title="正式开工，文字部分参考自在 Web 上展示 Live2D 吧！"></a>正式开工，文字部分参考自<a href="https://github.com/galnetwen/Live2D">在 Web 上展示 Live2D 吧！</a></h3><p>在需要页面的头部文件（header）引入界面样式，在 head 标签内插入如下代码：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/live2d/css/live2d.css&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure><p>在 需要页面的body 标签内找到合适的位置插入 Live2D 看板娘的元素，按照 Html 书写规范写 </p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;landlord&quot;</span> <span class="attr">style</span>=<span class="string">&quot;left:5px;bottom:0px;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;message&quot;</span> <span class="attr">style</span>=<span class="string">&quot;opacity:0&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">canvas</span> <span class="attr">id</span>=<span class="string">&quot;live2d&quot;</span> <span class="attr">width</span>=<span class="string">&quot;500&quot;</span> <span class="attr">height</span>=<span class="string">&quot;560&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live2d&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">canvas</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_body&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_name_body&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;name&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_name white_input&quot;</span> <span class="attr">id</span>=<span class="string">&quot;AIuserName&quot;</span> <span class="attr">autocomplete</span>=<span class="string">&quot;off&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;你的名字&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_text_body&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;talk&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_talk white_input&quot;</span> <span class="attr">id</span>=<span class="string">&quot;AIuserText&quot;</span> <span class="attr">autocomplete</span>=<span class="string">&quot;off&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;要和我聊什么呀？&quot;</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">&quot;button&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_send_btn&quot;</span> <span class="attr">id</span>=<span class="string">&quot;talk_send&quot;</span>&gt;</span>发送<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live_talk&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live_talk&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_box&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_info&quot;</span> <span class="attr">id</span>=<span class="string">&quot;showInfoBtn&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_talk&quot;</span> <span class="attr">id</span>=<span class="string">&quot;showTalkBtn&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_music&quot;</span> <span class="attr">id</span>=<span class="string">&quot;musicButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_youdu&quot;</span> <span class="attr">id</span>=<span class="string">&quot;youduButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_quit&quot;</span> <span class="attr">id</span>=<span class="string">&quot;hideButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live_statu_val&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live_statu_val&quot;</span> <span class="attr">value</span>=<span class="string">&quot;0&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">audio</span> <span class="attr">src</span>=<span class="string">&quot;&quot;</span> <span class="attr">style</span>=<span class="string">&quot;display:none;&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live2d_bgm&quot;</span> <span class="attr">data-bgm</span>=<span class="string">&quot;0&quot;</span> <span class="attr">preload</span>=<span class="string">&quot;none&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">audio</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live2dBGM&quot;</span> <span class="attr">value</span>=<span class="string">&quot;音乐地址&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;duType&quot;</span> <span class="attr">value</span>=<span class="string">&quot;douqilai,l2d_caihong&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;open_live2d&quot;</span>&gt;</span>召唤蕾姆<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure><p>如果需要BGM支持可以按照上面的例子添加：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live2dBGM&quot;</span> <span class="attr">value</span>=<span class="string">&quot;音乐地址&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure><p>在 需要页面的 body 标签结束前插入如下代码：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript"><span class="keyword">var</span> message_Path = <span class="string">&#x27;/live2d/&#x27;</span>;<span class="comment">//资源目录，如果目录不对请更改</span></span></span><br><span class="line"><span class="language-javascript"><span class="keyword">var</span> talkAPI = <span class="string">&quot;&quot;</span>;<span class="comment">//如果有类似图灵机器人的聊天接口请填写接口路径</span></span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;live2d/js/live2d.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;live2d/js/message.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure><p>鼠标放在页面某个元素上时，需要 Live2D 看板娘提示的请修改 message.json 文件。</p><p><strong>示例：</strong></p><pre><code>&#123;    &quot;mouseover&quot;: [        &#123;            &quot;selector&quot;: &quot;.title a&quot;,  //此处修改为你页面元素的标签名            &quot;text&quot;: [&quot;要看看 &#123;text&#125; 么？&quot;]  //此处修改为你需要提示的文字        &#125;,        &#123;            &quot;selector&quot;: &quot;#searchbox&quot;,            &quot;text&quot;: [&quot;在找什么东西呢，需要帮忙吗？&quot;]        &#125;    ],    &quot;click&quot;: [  //此处是 Live2D 看板娘的触摸事件提示        &#123;            &quot;selector&quot;: &quot;#landlord #live2d&quot;,            &quot;text&quot;: [&quot;不要动手动脚的！快把手拿开~~&quot;, &quot;真…真的是不知羞耻！&quot;,&quot;Hentai！&quot;, &quot;再摸的话我可要报警了！⌇●﹏●⌇&quot;, &quot;110吗，这里有个变态一直在摸我(ó﹏ò｡)&quot;]        &#125;    ]&#125;</code></pre><p>然后，刷新你的页面，看看效果吧！</p><p>注意路径别弄错了噢 ~<br>PHP 程序推荐使用主题函数获取绝对路径。</p><h3 id="效果预览"><a href="#效果预览" class="headerlink" title="效果预览"></a>效果预览</h3><p><img src="http://t1.aixinxi.net/o_1c9b38oqd1ekb12v9pcf1ku81r7a.gif-j.jpg">  </p><h3 id="模型说明"><a href="#模型说明" class="headerlink" title="模型说明"></a>模型说明</h3><p>本插件仅供学习和交流使用，禁止用于商业用途。<br>本插件用到的模型为《Re：从零开始的异世界生活》中的蕾姆，故版权归官方所有。<br>原项目使用了 GPL v2 开源协议。</p>]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/message.json"/>
+      <url>/live2d/live2d/message.json</url>
+      
+        <content type="html"><![CDATA[{"mouseover":[{"selector":"#showInfoBtn","text":["查看最新吐槽和站内信息"]},{"selector":"#showTalkBtn","text":["要和我聊天吗？"]},{"selector":"#hideButton","text":["要说再见了吗？"]},{"selector":"#musicButton","text":["给页面加点音乐吗？"]},{"selector":"#youduButton","text":["按钮有毒，癫痫患者不要开启！！！<br>点一下开启，再点一下可以关闭。"]},{"selector":"#huanzhuangButton","text":["要换一套衣服吗？"]},{"selector":".article-title","text":["要看看 {text} 么？"]},{"selector":".searchbox","text":["在找什么东西呢，需要帮忙吗？"]}],"click":[{"selector":"#landlord #live2d","text":["呐，你想变成什么颜色？","如果是这样的话，那就从我的心中滚出去。","因为有以后，所以才有趣。","如果因为害怕失败，而不去努力，那就不会有能够成功的人。","要抹去懊悔，终究只有继续不断努力。"]}]}]]></content>
       
     </entry>
     
@@ -276,65 +306,10 @@
     
     <entry>
       <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/physics.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/physics.json</url>
-      
-        <content type="html"><![CDATA[{"type":"Live2D Physics","physics_hair":[{"label":"hair_front","setup":{"length":0.17,"regist":0.5,"mass":0.1},"src":[{"id":"PARAM_ANGLE_X","ptype":"x","scale":0.005,"weight":1},{"id":"PARAM_ANGLE_Z","ptype":"angle","scale":0.8,"weight":1}],"targets":[{"id":"PARAM_HAIR_FRONT","ptype":"angle","scale":0.025,"weight":1},{"id":"PARAM_HAIR_SIDE","ptype":"angle","scale":0.025,"weight":1}]},{"label":"hair_back","setup":{"length":0.34,"regist":0.5,"mass":0.2},"src":[{"id":"PARAM_ANGLE_X","ptype":"x","scale":0.005,"weight":1},{"id":"PARAM_ANGLE_Z","ptype":"angle","scale":0.8,"weight":1}],"targets":[{"id":"PARAM_HAIR_BACK","ptype":"angle","scale":0.025,"weight":1}]}]}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/README.html"/>
-      <url>/live2d/README.html</url>
-      
-        <content type="html"><![CDATA[<h1 id="Live2d的看板娘——蕾姆-Rem"><a href="#Live2d的看板娘——蕾姆-Rem" class="headerlink" title="Live2d的看板娘——蕾姆(Rem)"></a>Live2d的看板娘——蕾姆(Rem)</h1><h4 id="伊斯特瓦尔点这里。"><a href="#伊斯特瓦尔点这里。" class="headerlink" title="伊斯特瓦尔点这里。"></a><a href="https://www.wikimoe.com/?post=76">伊斯特瓦尔点这里</a>。</h4><h4 id="基于《给博客添加能动的看板娘-Live2D-将其添加到网页上吧》上的源码进行修改。"><a href="#基于《给博客添加能动的看板娘-Live2D-将其添加到网页上吧》上的源码进行修改。" class="headerlink" title="基于《给博客添加能动的看板娘(Live2D)-将其添加到网页上吧》上的源码进行修改。"></a>基于<a href="https://imjad.cn/archives/lab/add-dynamic-poster-girl-with-live2d-to-your-blog-02">《给博客添加能动的看板娘(Live2D)-将其添加到网页上吧》</a>上的源码进行修改。</h4><h4 id="在原先的基础上加上了如下功能："><a href="#在原先的基础上加上了如下功能：" class="headerlink" title="在原先的基础上加上了如下功能："></a>在原先的基础上加上了如下功能：</h4><pre><code>1.可以基于图灵机器人的聊天功能（需要自己写接口，默认隐藏）。2.能够随意移动并记录位置（关闭浏览器后失效）。3.能够随意唤醒或者关闭并记录状态。4.自动判断浏览器是否为IE或者手机浏览器，如果判断为true则不加载伊斯。5.给骚扰加了限制频率，不能狂骚扰了。</code></pre><h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><p>首先下载代码。</p><p>然后把解压出来的文件夹改名为：live2d 。</p><h3 id="正式开工，文字部分参考自在-Web-上展示-Live2D-吧！"><a href="#正式开工，文字部分参考自在-Web-上展示-Live2D-吧！" class="headerlink" title="正式开工，文字部分参考自在 Web 上展示 Live2D 吧！"></a>正式开工，文字部分参考自<a href="https://github.com/galnetwen/Live2D">在 Web 上展示 Live2D 吧！</a></h3><p>在需要页面的头部文件（header）引入界面样式，在 head 标签内插入如下代码：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">&quot;stylesheet&quot;</span> <span class="attr">href</span>=<span class="string">&quot;/live2d/css/live2d.css&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure><p>在 需要页面的body 标签内找到合适的位置插入 Live2D 看板娘的元素，按照 Html 书写规范写 </p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;landlord&quot;</span> <span class="attr">style</span>=<span class="string">&quot;left:5px;bottom:0px;&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;message&quot;</span> <span class="attr">style</span>=<span class="string">&quot;opacity:0&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">canvas</span> <span class="attr">id</span>=<span class="string">&quot;live2d&quot;</span> <span class="attr">width</span>=<span class="string">&quot;500&quot;</span> <span class="attr">height</span>=<span class="string">&quot;560&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live2d&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">canvas</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_body&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_name_body&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;name&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_name white_input&quot;</span> <span class="attr">id</span>=<span class="string">&quot;AIuserName&quot;</span> <span class="attr">autocomplete</span>=<span class="string">&quot;off&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;你的名字&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_input_text_body&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;talk&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_talk white_input&quot;</span> <span class="attr">id</span>=<span class="string">&quot;AIuserText&quot;</span> <span class="attr">autocomplete</span>=<span class="string">&quot;off&quot;</span> <span class="attr">placeholder</span>=<span class="string">&quot;要和我聊什么呀？&quot;</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">&quot;button&quot;</span> <span class="attr">class</span>=<span class="string">&quot;live_talk_send_btn&quot;</span> <span class="attr">id</span>=<span class="string">&quot;talk_send&quot;</span>&gt;</span>发送<span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live_talk&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live_talk&quot;</span> <span class="attr">value</span>=<span class="string">&quot;1&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_box&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_info&quot;</span> <span class="attr">id</span>=<span class="string">&quot;showInfoBtn&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_talk&quot;</span> <span class="attr">id</span>=<span class="string">&quot;showTalkBtn&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_music&quot;</span> <span class="attr">id</span>=<span class="string">&quot;musicButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_youdu&quot;</span> <span class="attr">id</span>=<span class="string">&quot;youduButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">&quot;live_ico_item type_quit&quot;</span> <span class="attr">id</span>=<span class="string">&quot;hideButton&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live_statu_val&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live_statu_val&quot;</span> <span class="attr">value</span>=<span class="string">&quot;0&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">audio</span> <span class="attr">src</span>=<span class="string">&quot;&quot;</span> <span class="attr">style</span>=<span class="string">&quot;display:none;&quot;</span> <span class="attr">id</span>=<span class="string">&quot;live2d_bgm&quot;</span> <span class="attr">data-bgm</span>=<span class="string">&quot;0&quot;</span> <span class="attr">preload</span>=<span class="string">&quot;none&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">audio</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live2dBGM&quot;</span> <span class="attr">value</span>=<span class="string">&quot;音乐地址&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;duType&quot;</span> <span class="attr">value</span>=<span class="string">&quot;douqilai,l2d_caihong&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;open_live2d&quot;</span>&gt;</span>召唤蕾姆<span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure><p>如果需要BGM支持可以按照上面的例子添加：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">input</span> <span class="attr">name</span>=<span class="string">&quot;live2dBGM&quot;</span> <span class="attr">value</span>=<span class="string">&quot;音乐地址&quot;</span> <span class="attr">type</span>=<span class="string">&quot;hidden&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure><p>在 需要页面的 body 标签结束前插入如下代码：</p><figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;https://apps.bdimg.com/libs/jquery/1.7.1/jquery.min.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript"><span class="keyword">var</span> message_Path = <span class="string">&#x27;/live2d/&#x27;</span>;<span class="comment">//资源目录，如果目录不对请更改</span></span></span><br><span class="line"><span class="language-javascript"><span class="keyword">var</span> talkAPI = <span class="string">&quot;&quot;</span>;<span class="comment">//如果有类似图灵机器人的聊天接口请填写接口路径</span></span></span><br><span class="line"><span class="language-javascript"></span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;live2d/js/live2d.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;text/javascript&quot;</span> <span class="attr">src</span>=<span class="string">&quot;live2d/js/message.js&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure><p>鼠标放在页面某个元素上时，需要 Live2D 看板娘提示的请修改 message.json 文件。</p><p><strong>示例：</strong></p><pre><code>&#123;    &quot;mouseover&quot;: [        &#123;            &quot;selector&quot;: &quot;.title a&quot;,  //此处修改为你页面元素的标签名            &quot;text&quot;: [&quot;要看看 &#123;text&#125; 么？&quot;]  //此处修改为你需要提示的文字        &#125;,        &#123;            &quot;selector&quot;: &quot;#searchbox&quot;,            &quot;text&quot;: [&quot;在找什么东西呢，需要帮忙吗？&quot;]        &#125;    ],    &quot;click&quot;: [  //此处是 Live2D 看板娘的触摸事件提示        &#123;            &quot;selector&quot;: &quot;#landlord #live2d&quot;,            &quot;text&quot;: [&quot;不要动手动脚的！快把手拿开~~&quot;, &quot;真…真的是不知羞耻！&quot;,&quot;Hentai！&quot;, &quot;再摸的话我可要报警了！⌇●﹏●⌇&quot;, &quot;110吗，这里有个变态一直在摸我(ó﹏ò｡)&quot;]        &#125;    ]&#125;</code></pre><p>然后，刷新你的页面，看看效果吧！</p><p>注意路径别弄错了噢 ~<br>PHP 程序推荐使用主题函数获取绝对路径。</p><h3 id="效果预览"><a href="#效果预览" class="headerlink" title="效果预览"></a>效果预览</h3><p><img src="http://t1.aixinxi.net/o_1c9b38oqd1ekb12v9pcf1ku81r7a.gif-j.jpg">  </p><h3 id="模型说明"><a href="#模型说明" class="headerlink" title="模型说明"></a>模型说明</h3><p>本插件仅供学习和交流使用，禁止用于商业用途。<br>本插件用到的模型为《Re：从零开始的异世界生活》中的蕾姆，故版权归官方所有。<br>原项目使用了 GPL v2 开源协议。</p>]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
       <link href="/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.pose.json"/>
       <url>/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.pose.json</url>
       
         <content type="html"><![CDATA[{"type":"Live2D Pose","parts_visible":[{"group":[{"id":"PARTS_01_CLOTHE_01_ARM_L_A"},{"id":"PARTS_01_CLOTHE_01_ARM_L_B"}]},{"group":[{"id":"PARTS_01_CLOTHE_01_ARM_R_A"},{"id":"PARTS_01_CLOTHE_01_ARM_R_B"}]}]}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/seifuku.model.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/seifuku.model.json</url>
-      
-        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"seifuku.moc","textures":["seifuku.1024/L2DMSR_U_00.png","seifuku.1024/L2DMSR_U_01.png","seifuku.1024/L2DMSR_U_02.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"seifuku.motions/motion1.mtn"},{"file":"seifuku.motions/motion10.mtn"},{"file":"seifuku.motions/motion11.mtn"},{"file":"seifuku.motions/motion12.mtn"},{"file":"seifuku.motions/motion2.mtn"},{"file":"seifuku.motions/motion4.mtn"},{"file":"seifuku.motions/motion5.mtn"},{"file":"seifuku.motions/motion6.mtn"},{"file":"seifuku.motions/motion7.mtn"},{"file":"seifuku.motions/motion8.mtn"}],"tap_body":[{"file":"seifuku.motions/motion1.mtn"},{"file":"seifuku.motions/motion10.mtn"},{"file":"seifuku.motions/motion11.mtn"},{"file":"seifuku.motions/motion12.mtn"},{"file":"seifuku.motions/motion2.mtn"},{"file":"seifuku.motions/motion4.mtn"},{"file":"seifuku.motions/motion5.mtn"},{"file":"seifuku.motions/motion6.mtn"},{"file":"seifuku.motions/motion7.mtn"},{"file":"seifuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"seifuku.motions/motion3.mtn"},{"file":"seifuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"seifuku.pose.json"}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/shifuku.pose.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/shifuku.pose.json</url>
-      
-        <content type="html"><![CDATA[{"type":"Live2D Pose","parts_visible":[{"group":[{"id":"PARTS_01_CLOTHE_02_ARM_L_A"},{"id":"PARTS_01_CLOTHE_02_ARM_L_B"}]},{"group":[{"id":"PARTS_01_CLOTHE_02_ARM_R_A"},{"id":"PARTS_01_CLOTHE_02_ARM_R_B"}]}]}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.model.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.model.json</url>
-      
-        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"ryoufuku.moc","textures":["ryoufuku.1024/L2DMSR_R_00.png","ryoufuku.1024/L2DMSR_R_01.png","ryoufuku.1024/L2DMSR_R_02.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"ryoufuku.motions/motion1.mtn"},{"file":"ryoufuku.motions/motion10.mtn"},{"file":"ryoufuku.motions/motion11.mtn"},{"file":"ryoufuku.motions/motion12.mtn"},{"file":"ryoufuku.motions/motion2.mtn"},{"file":"ryoufuku.motions/motion4.mtn"},{"file":"ryoufuku.motions/motion5.mtn"},{"file":"ryoufuku.motions/motion6.mtn"},{"file":"ryoufuku.motions/motion7.mtn"},{"file":"ryoufuku.motions/motion8.mtn"}],"tap_body":[{"file":"ryoufuku.motions/motion1.mtn"},{"file":"ryoufuku.motions/motion10.mtn"},{"file":"ryoufuku.motions/motion11.mtn"},{"file":"ryoufuku.motions/motion12.mtn"},{"file":"ryoufuku.motions/motion2.mtn"},{"file":"ryoufuku.motions/motion4.mtn"},{"file":"ryoufuku.motions/motion5.mtn"},{"file":"ryoufuku.motions/motion6.mtn"},{"file":"ryoufuku.motions/motion7.mtn"},{"file":"ryoufuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"ryoufuku.motions/motion3.mtn"},{"file":"ryoufuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"ryoufuku.pose.json"}]]></content>
       
     </entry>
     
@@ -353,21 +328,10 @@
     
     <entry>
       <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f01.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f01.exp.json</url>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.model.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/ryoufuku.model.json</url>
       
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f02.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f02.exp.json</url>
-      
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_FORM","val":0.5},{"id":"PARAM_BROW_L_FORM","val":0.2},{"id":"PARAM_BROW_R_FORM","val":0.2},{"id":"PARAM_MOUTH_FORM","val":1}]}]]></content>
+        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"ryoufuku.moc","textures":["ryoufuku.1024/L2DMSR_R_00.png","ryoufuku.1024/L2DMSR_R_01.png","ryoufuku.1024/L2DMSR_R_02.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"ryoufuku.motions/motion1.mtn"},{"file":"ryoufuku.motions/motion10.mtn"},{"file":"ryoufuku.motions/motion11.mtn"},{"file":"ryoufuku.motions/motion12.mtn"},{"file":"ryoufuku.motions/motion2.mtn"},{"file":"ryoufuku.motions/motion4.mtn"},{"file":"ryoufuku.motions/motion5.mtn"},{"file":"ryoufuku.motions/motion6.mtn"},{"file":"ryoufuku.motions/motion7.mtn"},{"file":"ryoufuku.motions/motion8.mtn"}],"tap_body":[{"file":"ryoufuku.motions/motion1.mtn"},{"file":"ryoufuku.motions/motion10.mtn"},{"file":"ryoufuku.motions/motion11.mtn"},{"file":"ryoufuku.motions/motion12.mtn"},{"file":"ryoufuku.motions/motion2.mtn"},{"file":"ryoufuku.motions/motion4.mtn"},{"file":"ryoufuku.motions/motion5.mtn"},{"file":"ryoufuku.motions/motion6.mtn"},{"file":"ryoufuku.motions/motion7.mtn"},{"file":"ryoufuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"ryoufuku.motions/motion3.mtn"},{"file":"ryoufuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"ryoufuku.pose.json"}]]></content>
       
     </entry>
     
@@ -375,32 +339,10 @@
     
     <entry>
       <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f06.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f06.exp.json</url>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/physics.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/physics.json</url>
       
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":2,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":2,"def":1,"calc":"mult"},{"id":"PARAM_EYE_BALL_FORM","val":-1},{"id":"PARAM_BROW_L_Y","val":0.3},{"id":"PARAM_BROW_R_Y","val":0.3},{"id":"PARAM_BROW_L_FORM","val":0.5},{"id":"PARAM_BROW_R_FORM","val":0.5},{"id":"PARAM_MOUTH_FORM","val":-0.21}]}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/shifuku.model.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/shifuku.model.json</url>
-      
-        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"shifuku.moc","textures":["shifuku.1024/L2DMSR_S_00.png","shifuku.1024/L2DMSR_S_01.png","shifuku.1024/L2DMSR_S_02.png","shifuku.1024/L2DMSR_S_03.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"shifuku.motions/motion1.mtn"},{"file":"shifuku.motions/motion10.mtn"},{"file":"shifuku.motions/motion11.mtn"},{"file":"shifuku.motions/motion12.mtn"},{"file":"shifuku.motions/motion2.mtn"},{"file":"shifuku.motions/motion4.mtn"},{"file":"shifuku.motions/motion5.mtn"},{"file":"shifuku.motions/motion6.mtn"},{"file":"shifuku.motions/motion7.mtn"},{"file":"shifuku.motions/motion8.mtn"}],"tap_body":[{"file":"shifuku.motions/motion1.mtn"},{"file":"shifuku.motions/motion10.mtn"},{"file":"shifuku.motions/motion11.mtn"},{"file":"shifuku.motions/motion12.mtn"},{"file":"shifuku.motions/motion2.mtn"},{"file":"shifuku.motions/motion4.mtn"},{"file":"shifuku.motions/motion5.mtn"},{"file":"shifuku.motions/motion6.mtn"},{"file":"shifuku.motions/motion7.mtn"},{"file":"shifuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"shifuku.motions/motion3.mtn"},{"file":"shifuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"shifuku.pose.json"}]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f07.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f07.exp.json</url>
-      
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_FORM","val":0.3},{"id":"PARAM_TERE","val":1},{"id":"PARAM_BROW_L_ANGLE","val":0.25},{"id":"PARAM_BROW_R_ANGLE","val":0.25},{"id":"PARAM_BROW_L_FORM","val":-0.47},{"id":"PARAM_BROW_R_FORM","val":-0.43},{"id":"PARAM_MOUTH_FORM","val":0.5}]}]]></content>
+        <content type="html"><![CDATA[{"type":"Live2D Physics","physics_hair":[{"label":"hair_front","setup":{"length":0.17,"regist":0.5,"mass":0.1},"src":[{"id":"PARAM_ANGLE_X","ptype":"x","scale":0.005,"weight":1},{"id":"PARAM_ANGLE_Z","ptype":"angle","scale":0.8,"weight":1}],"targets":[{"id":"PARAM_HAIR_FRONT","ptype":"angle","scale":0.025,"weight":1},{"id":"PARAM_HAIR_SIDE","ptype":"angle","scale":0.025,"weight":1}]},{"label":"hair_back","setup":{"length":0.34,"regist":0.5,"mass":0.2},"src":[{"id":"PARAM_ANGLE_X","ptype":"x","scale":0.005,"weight":1},{"id":"PARAM_ANGLE_Z","ptype":"angle","scale":0.8,"weight":1}],"targets":[{"id":"PARAM_HAIR_BACK","ptype":"angle","scale":0.025,"weight":1}]}]}]]></content>
       
     </entry>
     
@@ -419,10 +361,43 @@
     
     <entry>
       <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f08.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f08.exp.json</url>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/seifuku.model.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/seifuku.model.json</url>
       
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.8,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.8,"def":1,"calc":"mult"},{"id":"PARAM_BROW_L_FORM","val":-0.5},{"id":"PARAM_BROW_R_FORM","val":-0.5},{"id":"PARAM_MOUTH_FORM","val":-1}]}]]></content>
+        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"seifuku.moc","textures":["seifuku.1024/L2DMSR_U_00.png","seifuku.1024/L2DMSR_U_01.png","seifuku.1024/L2DMSR_U_02.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"seifuku.motions/motion1.mtn"},{"file":"seifuku.motions/motion10.mtn"},{"file":"seifuku.motions/motion11.mtn"},{"file":"seifuku.motions/motion12.mtn"},{"file":"seifuku.motions/motion2.mtn"},{"file":"seifuku.motions/motion4.mtn"},{"file":"seifuku.motions/motion5.mtn"},{"file":"seifuku.motions/motion6.mtn"},{"file":"seifuku.motions/motion7.mtn"},{"file":"seifuku.motions/motion8.mtn"}],"tap_body":[{"file":"seifuku.motions/motion1.mtn"},{"file":"seifuku.motions/motion10.mtn"},{"file":"seifuku.motions/motion11.mtn"},{"file":"seifuku.motions/motion12.mtn"},{"file":"seifuku.motions/motion2.mtn"},{"file":"seifuku.motions/motion4.mtn"},{"file":"seifuku.motions/motion5.mtn"},{"file":"seifuku.motions/motion6.mtn"},{"file":"seifuku.motions/motion7.mtn"},{"file":"seifuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"seifuku.motions/motion3.mtn"},{"file":"seifuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"seifuku.pose.json"}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/shifuku.model.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/shifuku.model.json</url>
+      
+        <content type="html"><![CDATA[{"version":"Sample 1.0.0","model":"shifuku.moc","textures":["shifuku.1024/L2DMSR_S_00.png","shifuku.1024/L2DMSR_S_01.png","shifuku.1024/L2DMSR_S_02.png","shifuku.1024/L2DMSR_S_03.png"],"lip_sync":"false","layout":{"center_x":0,"center_y":-0.05,"width":2},"hit_areas_custom":{"head_x":[-0.3,1.12],"head_y":[0.26,0.56],"body_x":[-0.41,0.58],"body_y":[0.46,-1.12]},"motions":{"flick_head":[{"file":"shifuku.motions/motion1.mtn"},{"file":"shifuku.motions/motion10.mtn"},{"file":"shifuku.motions/motion11.mtn"},{"file":"shifuku.motions/motion12.mtn"},{"file":"shifuku.motions/motion2.mtn"},{"file":"shifuku.motions/motion4.mtn"},{"file":"shifuku.motions/motion5.mtn"},{"file":"shifuku.motions/motion6.mtn"},{"file":"shifuku.motions/motion7.mtn"},{"file":"shifuku.motions/motion8.mtn"}],"tap_body":[{"file":"shifuku.motions/motion1.mtn"},{"file":"shifuku.motions/motion10.mtn"},{"file":"shifuku.motions/motion11.mtn"},{"file":"shifuku.motions/motion12.mtn"},{"file":"shifuku.motions/motion2.mtn"},{"file":"shifuku.motions/motion4.mtn"},{"file":"shifuku.motions/motion5.mtn"},{"file":"shifuku.motions/motion6.mtn"},{"file":"shifuku.motions/motion7.mtn"},{"file":"shifuku.motions/motion8.mtn"}],"talk":[{"file":"talk/DK_NOZOMU_0041.mtn"},{"file":"talk/DK_NOZOMU_0061.mtn"},{"file":"talk/DK_NOZOMU_0067.mtn"}],"idle":[{"file":"shifuku.motions/motion3.mtn"},{"file":"shifuku.motions/motion9.mtn"}]},"expressions":[{"name":"f01.exp.json","file":"expressions/f01.exp.json"},{"name":"f02.exp.json","file":"expressions/f02.exp.json"},{"name":"f03.exp.json","file":"expressions/f03.exp.json"},{"name":"f04.exp.json","file":"expressions/f04.exp.json"},{"name":"f05.exp.json","file":"expressions/f05.exp.json"},{"name":"f06.exp.json","file":"expressions/f06.exp.json"},{"name":"f07.exp.json","file":"expressions/f07.exp.json"},{"name":"f08.exp.json","file":"expressions/f08.exp.json"}],"physics":"physics.json","pose":"shifuku.pose.json"}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f04.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f04.exp.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_FORM","val":1},{"id":"PARAM_BROW_L_ANGLE","val":0.3},{"id":"PARAM_BROW_R_ANGLE","val":0.3},{"id":"PARAM_BROW_L_FORM","val":-0.5},{"id":"PARAM_BROW_R_FORM","val":-0.5},{"id":"PARAM_MOUTH_FORM","val":-0.5}]}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/shifuku.pose.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/shifuku.pose.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Pose","parts_visible":[{"group":[{"id":"PARTS_01_CLOTHE_02_ARM_L_A"},{"id":"PARTS_01_CLOTHE_02_ARM_L_B"}]},{"group":[{"id":"PARTS_01_CLOTHE_02_ARM_R_A"},{"id":"PARTS_01_CLOTHE_02_ARM_R_B"}]}]}]]></content>
       
     </entry>
     
@@ -441,6 +416,50 @@
     
     <entry>
       <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f01.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f01.exp.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f06.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f06.exp.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":2,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":2,"def":1,"calc":"mult"},{"id":"PARAM_EYE_BALL_FORM","val":-1},{"id":"PARAM_BROW_L_Y","val":0.3},{"id":"PARAM_BROW_R_Y","val":0.3},{"id":"PARAM_BROW_L_FORM","val":0.5},{"id":"PARAM_BROW_R_FORM","val":0.5},{"id":"PARAM_MOUTH_FORM","val":-0.21}]}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f08.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f08.exp.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.8,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.8,"def":1,"calc":"mult"},{"id":"PARAM_BROW_L_FORM","val":-0.5},{"id":"PARAM_BROW_R_FORM","val":-0.5},{"id":"PARAM_MOUTH_FORM","val":-1}]}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f07.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f07.exp.json</url>
+      
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_FORM","val":0.3},{"id":"PARAM_TERE","val":1},{"id":"PARAM_BROW_L_ANGLE","val":0.25},{"id":"PARAM_BROW_R_ANGLE","val":0.25},{"id":"PARAM_BROW_L_FORM","val":-0.47},{"id":"PARAM_BROW_R_FORM","val":-0.43},{"id":"PARAM_MOUTH_FORM","val":0.5}]}]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title></title>
       <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f05.exp.json"/>
       <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f05.exp.json</url>
       
@@ -452,10 +471,10 @@
     
     <entry>
       <title></title>
-      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f04.exp.json"/>
-      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f04.exp.json</url>
+      <link href="/live2d/live2d/model/Sakurasou/mashiro/expressions/f02.exp.json"/>
+      <url>/live2d/live2d/model/Sakurasou/mashiro/expressions/f02.exp.json</url>
       
-        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_L_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_R_OPEN","val":0.9,"def":1,"calc":"mult"},{"id":"PARAM_EYE_FORM","val":1},{"id":"PARAM_BROW_L_ANGLE","val":0.3},{"id":"PARAM_BROW_R_ANGLE","val":0.3},{"id":"PARAM_BROW_L_FORM","val":-0.5},{"id":"PARAM_BROW_R_FORM","val":-0.5},{"id":"PARAM_MOUTH_FORM","val":-0.5}]}]]></content>
+        <content type="html"><![CDATA[{"type":"Live2D Expression","fade_in":500,"fade_out":500,"params":[{"id":"PARAM_EYE_FORM","val":0.5},{"id":"PARAM_BROW_L_FORM","val":0.2},{"id":"PARAM_BROW_R_FORM","val":0.2},{"id":"PARAM_MOUTH_FORM","val":1}]}]]></content>
       
     </entry>
     
